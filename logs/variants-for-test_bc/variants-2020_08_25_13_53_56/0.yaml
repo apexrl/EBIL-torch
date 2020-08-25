@@ -1,0 +1,43 @@
+bc_params:
+  batch_size: 256
+  eval_deterministic: true
+  freq_saving: 20
+  lr: 0.0003
+  max_path_length: 1000
+  min_steps_before_training: 0
+  mode: MLE
+  momentum: 0.9
+  no_terminal: false
+  num_epochs: 201
+  num_steps_between_train_calls: 1000
+  num_steps_per_epoch: 1000
+  num_steps_per_eval: 10000
+  num_updates_per_train_call: 100
+  replay_buffer_size: 20000
+  save_algorithm: false
+  save_best: true
+  save_best_starting_from_epoch: 0
+  save_environment: false
+  save_replay_buffer: false
+  wrap_absorbing: false
+description: Train a Behavioural Cloning model
+env_specs:
+  env_kwargs: {}
+  env_name: halfcheetah
+  eval_env_seed: 78236
+  training_env_seed: 24495
+exp_id: 0
+exp_name: test_bc
+expert_idx: 0
+expert_name: norm_halfcheetah_32_demos_sub_20
+mem_per_worker: 16gb
+node_exclusions: gpu048,gpu024,gpu025,gpu012,gpu027
+num_cpu_per_worker: 8
+num_gpu_per_worker: 0
+num_workers: 1
+partitions: p100,max12hours
+policy_net_size: 256
+policy_num_hidden_layers: 2
+scale_env_with_demo_stats: true
+script_path: run_scripts/bc_exp_script.py
+seed: 723894

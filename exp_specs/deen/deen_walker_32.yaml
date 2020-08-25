@@ -1,0 +1,66 @@
+meta_data:
+  script_path: run_scripts/ebm_exp_script.py
+  exp_name: ebm_walker_32_train
+  description: Train a Deep Energy Estimation model
+  num_workers: 1
+  num_gpu_per_worker: 0 # 1
+  num_cpu_per_worker: 8
+  mem_per_worker: 16gb
+  partitions: p100,max12hours
+  node_exclusions: gpu048,gpu024,gpu025,gpu012,gpu027
+# -----------------------------------------------------------------------------
+variables:
+  # seed: [723894, 23789]
+  seed: [723894]
+  sigma: [0.1, 0.2, 0.3] # [0.1] # 
+
+# -----------------------------------------------------------------------------
+constants:
+  expert_name: 'norm_walker_32_demos_sub_20'
+  expert_idx: 0
+  scale_env_with_demo_stats: true
+
+  policy_net_size: 256
+  policy_num_hidden_layers: 2
+
+  ebm_num_blocks: 2
+  ebm_hid_dim: 200
+  ebm_hid_act: tanh
+  ebm_use_bn: false
+  ebm_clamp_magnitude: 1.0
+
+  ebm_params:
+    mode: 'deen'
+    state_only: false
+
+    num_epochs: 4000
+    num_steps_per_epoch: -1
+    num_steps_between_train_calls: -1
+    max_path_length: 1000
+    min_steps_before_training: 0
+
+    eval_every_epoch: 100
+    eval_deterministic: true
+    num_steps_per_eval: 1000
+    
+    replay_buffer_size: 20000
+    no_terminal: false
+    wrap_absorbing: false
+
+    lr: 0.001
+    momentum: 0.9
+    batch_size: 64
+
+    save_best: true
+    save_best_starting_from_epoch: 0
+
+    freq_saving: 500
+    save_replay_buffer: false
+    save_environment: false
+    save_algorithm: false
+
+  env_specs:
+    env_name: 'walker2d'
+    env_kwargs: {}
+    eval_env_seed: 78236
+    training_env_seed: 24495
