@@ -18,7 +18,8 @@ from rlkit.launchers.launcher_util import setup_logger, set_seed
 from rlkit.envs.wrappers import ScaledEnv
 from rlkit.torch.sac.policies import ReparamTanhMultivariateGaussianPolicy
 from rlkit.torch.ebil.energy_models.simple_ebm_models import MLPEBM
-from rlkit.torch.ebil.deen import DEEN
+from rlkit.torch.ebil.energy_models.simple_ae_models import MLPAE
+from rlkit.torch.ebil.ebm_learn import EBMLearn
 
 
 def experiment(variant):
@@ -72,12 +73,13 @@ def experiment(variant):
         obs_dim=obs_dim,
         action_dim=action_dim,
     )
-
+    
+    input_dim = obs_dim + action_dim if not variant['ebm_params']['state_only'] else 2*obs_dim
 
     # build the energy model
     if (variant['ebm_params']['mode']) == 'deen':
         ebm_model = MLPEBM(
-            obs_dim + action_dim if not variant['ebm_params']['state_only'] else 2*obs_dim,
+            input_dim,
             num_layer_blocks=variant['ebm_num_blocks'],
             hid_dim=variant['ebm_hid_dim'],
             hid_act=variant['ebm_hid_act'],
@@ -85,13 +87,35 @@ def experiment(variant):
             clamp_magnitude=variant['ebm_clamp_magnitude']
         )
 
-        algorithm = DEEN(
+        algorithm = EBMLearn(
             env=env,
             training_env=training_env,
             ebm=ebm_model,
-            input_dim = obs_dim + action_dim if not variant['ebm_params']['state_only'] else 2*obs_dim,
+            input_dim = input_dim,
             exploration_policy=policy,
             sigma=variant['sigma'],
+
+            expert_replay_buffer=expert_replay_buffer,
+            **variant['ebm_params']
+        )
+    
+    # build the energy model
+    elif (variant['ebm_params']['mode']) == 'ae':
+        ebm_model = MLPAE(
+            input_dim,
+            num_layer_blocks=variant['ebm_num_blocks'],
+            hid_dim=variant['ebm_hid_dim'],
+            hid_act=variant['ebm_hid_act'],
+            use_bn=variant['ebm_use_bn'],
+        )
+
+        algorithm = EBMLearn(
+            env=env,
+            training_env=training_env,
+            ebm=ebm_model,
+            input_dim = input_dim,
+            exploration_policy=policy,
+            sigma=None,
 
             expert_replay_buffer=expert_replay_buffer,
             **variant['ebm_params']
@@ -120,6 +144,6 @@ if __name__ == '__main__':
     exp_prefix = exp_specs['exp_name']
     seed = exp_specs['seed']
     set_seed(seed)
-    setup_logger(exp_prefix=exp_prefix, exp_id=exp_id, variant=exp_specs)
+    setup_logger(exp_prefix=exp_prefix, exp_id=exp_id, variant=exp_specs, snapshot_mode="all")
 
     experiment(exp_specs)

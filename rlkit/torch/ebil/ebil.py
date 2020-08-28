@@ -11,20 +11,20 @@ import rlkit.torch.pytorch_util as ptu
 from rlkit.torch.core import np_to_pytorch_batch
 from rlkit.torch.torch_base_algorithm import TorchBaseAlgorithm
 
-def reward_func(args):
-    if args.reward_func == '-energy':
-        return lambda x:-x
-    elif args.reward_func == '-energy+1':
+def reward_func(rew_name, cons=0):
+    if rew_name == '-energy':
+        return lambda x:-x+cons
+    elif rew_name == '-energy+1':
         return lambda x:1-x
-    elif args.reward_func == '-energy-1':
+    elif rew_name == '-energy-1':
         return lambda x:-1-x
-    elif args.reward_func == 'exp(-energy-1)':
+    elif rew_name == 'exp(-energy-1)':
         return lambda x:tf.exp(-x-1)
-    elif args.reward_func == '(-energy+1)div2':
+    elif rew_name == '(-energy+1)div2':
         return lambda x:(-x+1)/2.0
-    elif args.reward_func == 'exp(-energy+1)':
+    elif rew_name == 'exp(-energy+1)':
         return lambda x:tf.exp(-x+1)
-    elif args.reward_func == 'exp(-energy)':
+    elif rew_name == 'exp(-energy)':
         return lambda x:tf.exp(-x)
     else:
         raise NotImplementedError
@@ -45,6 +45,8 @@ class EBIL(TorchBaseAlgorithm):
         expert_replay_buffer,
 
         state_only=False,
+        cons=0, 
+        clamp_magnitude=1.0,
 
         policy_optim_batch_size=1024,
         policy_optim_batch_size_from_expert=0,
@@ -55,18 +57,17 @@ class EBIL(TorchBaseAlgorithm):
         use_grad_pen=True,
         grad_pen_weight=10,
 
-        rew_clip_min=None,
-        rew_clip_max=None,
-
         **kwargs
     ):
-        assert mode in ['deen'], 'Invalid ebil algorithm!'
+        assert mode in ['deen', 'ae'], 'Invalid ebil algorithm!'
         if kwargs['wrap_absorbing']: raise NotImplementedError()
         super().__init__(**kwargs)
 
         self.mode = mode
         self.rew_func = rew_func
+        self.cons = cons
         self.state_only = state_only
+        self.clamp_magnitude = clamp_magnitude
 
         self.expert_replay_buffer = expert_replay_buffer
 
@@ -82,11 +83,7 @@ class EBIL(TorchBaseAlgorithm):
         self.num_policy_update_loops_per_train_call = num_policy_update_loops_per_train_call
         self.num_policy_updates_per_loop_iter = num_policy_updates_per_loop_iter
 
-        self.rew_clip_min = rew_clip_min
-        self.rew_clip_max = rew_clip_max
-        self.clip_min_rews = rew_clip_min is not None
-        self.clip_max_rews = rew_clip_max is not None
-
+        self.ebm_eval_statistics = None
 
     def get_batch(self, batch_size, from_expert, keys=None):
         if from_expert:
@@ -97,6 +94,13 @@ class EBIL(TorchBaseAlgorithm):
         batch = np_to_pytorch_batch(batch)
         return batch
 
+    def get_energy(self, data):
+        if self.mode == 'deen':
+            return self.ebm(data)
+        elif self.mode == 'ae':
+            return (data - self.ebm(data))**2
+        else:
+            raise NotImplementedError
 
     def _end_epoch(self):
         self.policy_trainer.end_epoch()
@@ -105,12 +109,13 @@ class EBIL(TorchBaseAlgorithm):
 
     def evaluate(self, epoch):
         self.eval_statistics = OrderedDict()
+        self.eval_statistics.update(self.ebm_eval_statistics)
         self.eval_statistics.update(self.policy_trainer.get_eval_statistics())
         super().evaluate(epoch)
 
 
-    def _do_training(self, epoch, mode):
-        for t in range(self.num_update_loops_per_train_call):
+    def _do_training(self, epoch):
+        for t in range(self.num_policy_update_loops_per_train_call):
             for _ in range(self.num_policy_updates_per_loop_iter):
                 self._do_policy_training(epoch)
 
@@ -145,23 +150,27 @@ class EBIL(TorchBaseAlgorithm):
                 ebm_input = torch.cat([obs, next_obs], dim=1)
             else:
                 ebm_input = torch.cat([obs, acts], dim=1)
-            ebm_logits = self.ebm(ebm_input).detach()
-
-        # compute the reward using the algorithm
-        if self.mode == 'deen':
-            policy_batch['rewards'] = ebm_logits
-        else
-            raise NotImplementedError
         
-        if self.clip_max_rews:
-            policy_batch['rewards'] = torch.clamp(policy_batch['rewards'], max=self.rew_clip_max)
-        if self.clip_min_rews:
-            policy_batch['rewards'] = torch.clamp(policy_batch['rewards'], min=self.rew_clip_min)
+        if self.clamp_magnitude > 0:
+            print(self.clamp_magnitude, self.clamp_magnitude is None)
+            ebm_rew = torch.clamp(ebm_input, min=-1.0*self.clamp_magnitude, max=self.clamp_magnitude)
 
-        policy_batch['rewards'] = reward_func(self.rew_func)
+        ebm_rew = self.get_energy(ebm_input).detach()
+        # compute the reward using the algorithm
+        policy_batch['rewards'] = reward_func(self.rew_func, self.cons)(ebm_rew)
         
         # policy optimization step
         self.policy_trainer.train_step(policy_batch)
+
+        """
+        Save some statistics for eval
+        """
+        if self.ebm_eval_statistics is None:
+            """
+            Eval should set this to None.
+            This way, these statistics are only computed for one batch.
+            """
+            self.ebm_eval_statistics = OrderedDict()
 
         self.ebm_eval_statistics['ebm Rew Mean'] = np.mean(ptu.get_numpy(policy_batch['rewards']))
         self.ebm_eval_statistics['ebm Rew Std'] = np.std(ptu.get_numpy(policy_batch['rewards']))

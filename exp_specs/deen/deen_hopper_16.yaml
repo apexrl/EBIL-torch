@@ -54,7 +54,7 @@ constants:
     save_best: true
     save_best_starting_from_epoch: 0
 
-    freq_saving: 500
+    freq_saving: 100
     save_replay_buffer: false
     save_environment: false
     save_algorithm: false

@@ -13,7 +13,7 @@ class MLPEBM(nn.Module):
         hid_dim=100,
         hid_act='relu',
         use_bn=True,
-        clamp_magnitude=1.0,
+        clamp_magnitude=None,
     ):
         super().__init__()
 
@@ -32,14 +32,16 @@ class MLPEBM(nn.Module):
 
         for i in range(num_layer_blocks - 1):
             self.mod_list.append(nn.Linear(hid_dim, hid_dim))
-            if use_bn: self.mod_list.append(nn.BatchNorm1d(hid_dim))
+            # if use_bn: self.mod_list.append(nn.BatchNorm1d(hid_dim))
             self.mod_list.append(hid_act_class())
         
         self.mod_list.append(nn.Linear(hid_dim, 1))
+        # self.mod_list.append(hid_act_class())
         self.model = nn.Sequential(*self.mod_list)
 
 
     def forward(self, batch):
         output = self.model(batch)
-        output = torch.clamp(output, min=-1.0*self.clamp_magnitude, max=self.clamp_magnitude)
+        # if self.clamp_magnitude is not None:
+            # output = torch.clamp(output, min=-1.0*self.clamp_magnitude, max=self.clamp_magnitude)
         return output
