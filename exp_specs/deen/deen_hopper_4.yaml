@@ -1,14 +1,100 @@
-meta_data:
+\
+]\\]\
+\\]\
+\\]
+\
+]
+]\
+\]\
+\\]
+\]\\
+\\]\\]\\]\\]]\\
+
+]\\]\\\
+
+\
+\\]\\]]
+\
+\]\\
+]\\
+\]\
+\]\]\\
+\]
+]\]\\]\\
+
+]\\
+
+\]]\\
+\]\\\]\\
+\]\\
+]]\\
+]\\
+]\
+]\\]\]\
+]
+\]\\
+
+]\]\\
+
+]\
+]\\\\]\
+\\\
+]\\
+]]\\
+]\\
+\]\\\
+\
+]\]\
+\]\]\
+\
+\]\\\]
+\]
+\]\\\]\\
+\\
+
+]\\]\
+]\]\\
+\
+
+]\\]\]
+\\\]\\
+
+
+\]]
+\\]\]\\
+\]
+\]\
+
+\\]
+]\]\\
+\]\
+
+]\\
+\
+\]\]\
+\\\
+]\\]]\
+]\]\
+\\
+\\
+
+\]\
+\\
+\\\]\
+]
+\\]\
+\]meta_data:
   script_path: run_scripts/ebm_exp_script.py
   exp_name: ebm_hopper_4_train
   description: Train a Deep Energy Estimation model with hopper
-  num_workers: 2
+  num_workers: 5
   num_gpu_per_worker: 1 # 1
-  num_cpu_per_worker: 8
+  num_cpu_per_worker: 4
   mem_per_worker: 16gb
   partitions: p100,max12hours
   node_exclusions: gpu048,gpu024,gpu025,gpu012,gpu027
-# -----------------------------------------------------------------------------
+# \]
+\-----------------------------------------------------------------------------
 variables:
   # seed: [723894, 23789]
   seed: [723894]
@@ -30,16 +116,17 @@ constants:
   ebm_clamp_magnitude: 1.0
 
   ebm_params:
+
     mode: 'deen'
     state_only: false
 
-    num_epochs: 5000
+    num_epochs: 50001
     num_steps_per_epoch: -1
     num_steps_between_train_calls: -1
     max_path_length: 1000
     min_steps_before_training: 0
 
-    eval_every_epoch: 500
+    eval_every_epoch: 1000
     eval_deterministic: true
     num_steps_per_eval: 1000
     
@@ -54,7 +141,7 @@ constants:
     save_best: true
     save_best_starting_from_epoch: 0
 
-    freq_saving: 500
+    freq_saving: 1000
     save_replay_buffer: false
     save_environment: false
     save_algorithm: false

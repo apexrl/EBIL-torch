@@ -579,7 +579,7 @@ class AntAggregateExpert():
     
     def cuda(self):
         for p in self.e_dict.values():
-            p.cuda()
+            p.cuda(ptu.device)
     
     def cpu(self):
         for p in self.e_dict.values():

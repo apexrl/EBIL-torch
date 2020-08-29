@@ -592,7 +592,7 @@ class PostCondMLPPolicyWrapper(ExplorationPolicy):
         return self.policy.get_action(obs, deterministic=self.deterministic)
     
     def cuda(self):
-        self.policy.cuda()
+        self.policy.cuda(ptu.device)
     
     def cpu(self):
         self.policy.cpu()

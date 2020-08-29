@@ -14,6 +14,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--experiment', help='experiment specification file')
     parser.add_argument('--nosrun', help='don\'t use srun', action='store_true')
+    parser.add_argument('-g', '--gpu', help='gpu id', type=int, default=0)
     args = parser.parse_args()
     with open(args.experiment, 'r') as spec_file:
         spec_string = spec_file.read()
@@ -49,7 +50,7 @@ if __name__ == '__main__':
     running_processes = []
     args_idx = 0
     if args.nosrun:
-        command = 'python {script_path} -e {specs}'
+        command = 'python {script_path} -e {specs} -g {gpuid}'
     else:
         command = 'srun --gres=gpu:{num_gpu_per_worker} -c {num_cpu_per_worker} --mem {mem_per_worker} {node_exclusions} -p {partitions} python {script_path} -e {specs}'
     
@@ -58,6 +59,7 @@ if __name__ == '__main__':
     while (args_idx < num_variants) or (len(running_processes) > 0):
         if (len(running_processes) < num_workers) and (args_idx < num_variants):
             command_format_dict['specs'] = os.path.join(variants_dir, '%i.yaml'%args_idx)
+            command_format_dict['gpuid'] = args.gpu
             command_to_run = command.format(**command_format_dict)
             command_to_run = command_to_run.split()
             print(command_to_run)

@@ -1,10 +1,10 @@
 meta_data:
   script_path: run_scripts/ebm_exp_script.py
   exp_name: ebm_walker_16_train
-  description: Train a Deep Energy Estimation model
-  num_workers: 1
-  num_gpu_per_worker: 0 # 1
-  num_cpu_per_worker: 8
+  description: Train a Deep Energy Estimation model with walker
+  num_workers: 5
+  num_gpu_per_worker: 1 # 1
+  num_cpu_per_worker: 4
   mem_per_worker: 16gb
   partitions: p100,max12hours
   node_exclusions: gpu048,gpu024,gpu025,gpu012,gpu027
@@ -12,7 +12,7 @@ meta_data:
 variables:
   # seed: [723894, 23789]
   seed: [723894]
-  sigma: [0.1, 0.2, 0.3] # [0.1] # 
+  sigma: [0.05, 0.1, 0.15, 0.2, 0.3] # [0.1] # 
 
 # -----------------------------------------------------------------------------
 constants:
@@ -23,8 +23,8 @@ constants:
   policy_net_size: 256
   policy_num_hidden_layers: 2
 
-  ebm_num_blocks: 2
-  ebm_hid_dim: 200
+  ebm_num_blocks: 3
+  ebm_hid_dim: 256
   ebm_hid_act: tanh
   ebm_use_bn: false
   ebm_clamp_magnitude: 1.0
@@ -33,13 +33,13 @@ constants:
     mode: 'deen'
     state_only: false
 
-    num_epochs: 4000
+    num_epochs: 50001
     num_steps_per_epoch: -1
     num_steps_between_train_calls: -1
     max_path_length: 1000
     min_steps_before_training: 0
 
-    eval_every_epoch: 100
+    eval_every_epoch: 1000
     eval_deterministic: true
     num_steps_per_eval: 1000
     
@@ -47,14 +47,14 @@ constants:
     no_terminal: false
     wrap_absorbing: false
 
-    lr: 0.001
+    lr: 0.0001
     momentum: 0.9
     batch_size: 64
 
     save_best: true
     save_best_starting_from_epoch: 0
 
-    freq_saving: 100
+    freq_saving: 1000
     save_replay_buffer: false
     save_environment: false
     save_algorithm: false

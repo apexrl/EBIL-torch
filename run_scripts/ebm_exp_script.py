@@ -132,6 +132,7 @@ if __name__ == '__main__':
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--experiment', help='experiment specification file')
+    parser.add_argument('-g', '--gpu', help='gpu id', type=int, default=0)
     args = parser.parse_args()
     with open(args.experiment, 'r') as spec_file:
         spec_string = spec_file.read()
@@ -139,7 +140,7 @@ if __name__ == '__main__':
 
     if exp_specs['num_gpu_per_worker'] > 0:
         print('\n\nUSING GPU\n\n')
-        ptu.set_gpu_mode(True)
+        ptu.set_gpu_mode(True, args.gpu)
     exp_id = exp_specs['exp_id']
     exp_prefix = exp_specs['exp_name']
     seed = exp_specs['seed']

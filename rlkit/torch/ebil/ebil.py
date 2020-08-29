@@ -180,7 +180,7 @@ class EBIL(TorchBaseAlgorithm):
     
     @property
     def networks(self):
-        return [self.ebm] + self.policy_trainer.networks
+        return [self.ebm, self.exploration_policy] + self.policy_trainer.networks
 
 
     def get_epoch_snapshot(self, epoch):

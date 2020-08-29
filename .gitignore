@@ -122,3 +122,4 @@ old_hc_rand_vel.py
 
 # demos
 demos/
+old_logs/*
