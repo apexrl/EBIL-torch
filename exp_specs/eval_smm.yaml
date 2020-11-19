@@ -1,0 +1,41 @@
+meta_data:
+  script_path: run_scripts/eval_smm.py
+  exp_name: test_policy_eval
+  description: Evaluate a policy
+  num_workers: 1
+  num_gpu_per_worker: 1
+  num_cpu_per_worker: 8
+  mem_per_worker: 16gb
+  partitions: p100,max12hours
+  node_exclusions: gpu048,gpu024,gpu025,gpu012,gpu027
+# -----------------------------------------------------------------------------
+variables:
+  seed: [11992]
+
+# -----------------------------------------------------------------------------
+constants:
+  expert_name: 'pm_triangle'
+  expert_idx: 0
+
+  state_indices: [0, 1]
+
+  rescale: 10
+
+  policy_checkpoint: './logs/ebil-smm-triangle/ebil_smm_triangle_2020_10_04_23_13_42_0000--s-0/itr_350.pkl'
+  eval_deterministic: true
+
+  num_eval_steps: 60000
+  max_path_length: 3000
+  no_terminal: false
+  render: false
+  render_kwargs: {}
+
+  env_specs:
+    env_name: 'simple_point_mass'
+    task_name: 'triangle'
+    env_kwargs:
+      env_bound: 20
+      episode_len: 3000
+      obs_with_time: true
+    eval_env_seed: 78236
+    training_env_seed: 24495

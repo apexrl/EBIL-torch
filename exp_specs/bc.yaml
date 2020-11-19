@@ -1,6 +1,6 @@
 meta_data:
   script_path: run_scripts/bc_exp_script.py
-  exp_name: test_bc
+  exp_name: test_bc_hopper_16
   description: Train a Behavioural Cloning model
   num_workers: 1
   num_gpu_per_worker: 0 #1
@@ -15,9 +15,10 @@ variables:
 
 # -----------------------------------------------------------------------------
 constants:
-  expert_name: 'norm_halfcheetah_32_demos_sub_20'
+  expert_name: 'norm_hopper_16_demos_sub_20'
   expert_idx: 0
-  scale_env_with_demo_stats: true
+  scale_env_with_demo_stats: false
+  minmax_env_with_demo_stats: true
 
   policy_net_size: 256
   policy_num_hidden_layers: 2
@@ -32,7 +33,7 @@ constants:
     min_steps_before_training: 0
 
     eval_deterministic: true
-    num_steps_per_eval: 10000
+    num_steps_per_eval: 20000
     
     replay_buffer_size: 20000
     no_terminal: false
@@ -52,7 +53,7 @@ constants:
     save_algorithm: false
 
   env_specs:
-    env_name: 'halfcheetah'
+    env_name: 'hopper'
     env_kwargs: {}
     eval_env_seed: 78236
     training_env_seed: 24495

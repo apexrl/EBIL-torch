@@ -14,11 +14,22 @@ variables:
 
 # -----------------------------------------------------------------------------
 constants:
-  expert_name: 'norm_hopper_32_demos_sub_20'
+  expert_name: 'norm_walker_4_demos_sub_20'
   expert_idx: 0
-  scale_env_with_demo_stats: false
+  scale_env_with_demo_stats: true
+  minmax_env_with_demo_stats: false
 
-  policy_checkpoint: '/scratch/hdd001/home/kamyar/output/fmax_experts/hopper_expert.pkl'
+  policy_checkpoint: './logs/gail-walker-4-hype-search/gail_walker_4_hype_search_2020_10_02_07_45_30_0002--s-0/best.pkl'
+  # './logs/gail-walker-4-hype-search/gail_walker_4_hype_search_2020_10_01_00_23_18_0001--s-0/best.pkl'
+  # './logs/gail-hopper-4-hype-search/gail_hopper_4_hype_search_2020_09_30_14_02_36_0000--s-0/best.pkl'
+  # './logs/ebil-deen-walker-4-hype-search/ebil_deen_walker_4_hype_search_2020_09_24_01_10_56_0001--s-0/best.pkl'
+  # './logs/fairl-lunar-4-hype-search/fairl_lunar_4_hype_search_2020_09_30_01_26_16_0000--s-0/params.pkl'
+  
+  # './logs/ebil-deen-walker-4-hype-search/ebil_deen_walker_4_hype_search_2020_09_30_13_56_24_0000--s-0/params.pkl'
+  #'./logs/walker_works!/best.pkl'
+  #'./logs/ebil-deen-hopper-4-hype-search/ebil_deen_hopper_4_hype_search_2020_09_28_14_47_52_0000--s-0/best.pkl'
+  # './logs/test-sac-hopper/test_sac_hopper_2020_09_23_22_46_00_0000--s-0/params.pkl'
+  # './logs/test-sac-lunarlander/test_sac_lunarlander_2020_09_21_01_54_35_0000--s-0/best.pkl'
   eval_deterministic: true
 
   num_eval_steps: 20000
@@ -28,11 +39,6 @@ constants:
   render_kwargs: {}
 
   env_specs:
-    env_name: 'hopper'
+    env_name: 'walker'
     env_kwargs: {}
     eval_env_seed: 3562
-
-  # [8430.64356833, 8376.64121336, 8383.26337592]
-  # [6524.93489637, 6652.58334316, 6650.24550015]
-  # [4926.57232853, 4851.75933044, 4848.70983813]
-  # [3381.99583641, 3102.46006099, 3216.32965871]

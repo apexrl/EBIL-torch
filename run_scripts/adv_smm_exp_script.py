@@ -128,13 +128,18 @@ if __name__ == '__main__':
         spec_string = spec_file.read()
         exp_specs = yaml.load(spec_string)
 
+    # make all seeds the same.
+    exp_specs['env_specs']['eval_env_seed'] = exp_specs['env_specs']['training_env_seed'] = exp_specs['seed']
+
     if exp_specs['num_gpu_per_worker'] > 0:
         print('\n\nUSING GPU\n\n')
         ptu.set_gpu_mode(True)
     exp_id = exp_specs['exp_id']
     exp_prefix = exp_specs['exp_name']
+    exp_prefix = exp_prefix + '--gp-{}--rs-{}'.format(exp_specs['adv_irl_params']['grad_pen_weight'],
+                                                            exp_specs['sac_params']['reward_scale'],)
     seed = exp_specs['seed']
     set_seed(seed)
-    setup_logger(exp_prefix=exp_prefix, exp_id=exp_id, variant=exp_specs)
+    setup_logger(exp_prefix=exp_prefix, exp_id=exp_id, variant=exp_specs, seed=seed)
 
     experiment(exp_specs)

@@ -1,8 +1,8 @@
 meta_data:
   script_path: run_scripts/adv_irl_exp_script.py
-  exp_name: fairl_hopper_4_hype_search
+  exp_name: fairl_lunar_4_hype_search
   description: Train an adversarial IRL model
-  num_workers: 1 # 64
+  num_workers: 6 # 64
   num_gpu_per_worker: 1 # 0
   num_cpu_per_worker: 32 # 2
   mem_per_worker: 4gb
@@ -11,17 +11,18 @@ meta_data:
 # -----------------------------------------------------------------------------
 variables:
   adv_irl_params:
-    grad_pen_weight: [0.5] # [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
+    grad_pen_weight: [0.5, 1.0] # [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
   sac_params:
-    reward_scale: [64.0] # [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
+    reward_scale: [16.0, 32.0, 64.0] # [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
   # seed: [723894, 23789]
   seed: [723894]
 
 # -----------------------------------------------------------------------------
 constants:
-  expert_name: 'norm_hopper_4_demos_sub_20'
+  expert_name: 'lunar_4_demos_sub_20'
   expert_idx: 0
-  scale_env_with_demo_stats: true
+  scale_env_with_demo_stats: false
+  minmax_env_with_demo_stats: false
 
   disc_num_blocks: 2
   disc_hid_dim: 128
@@ -46,7 +47,7 @@ constants:
     num_steps_per_eval: 20000
     
     replay_buffer_size: 20000
-    no_terminal: true
+    no_terminal: false
     wrap_absorbing: false
 
     num_update_loops_per_train_call: 100
@@ -79,7 +80,7 @@ constants:
     policy_std_reg_weight: 0.001
 
   env_specs:
-    env_name: 'hopper'
+    env_name: 'lunarlandercont'
     env_kwargs: {}
     eval_env_seed: 78236
     training_env_seed: 24495

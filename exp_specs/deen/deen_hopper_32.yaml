@@ -1,6 +1,6 @@
 meta_data:
   script_path: run_scripts/ebm_exp_script.py
-  exp_name: ebm_hopper_32_train
+  exp_name: ebm_deen_hopper_32_train
   description: Train a Deep Energy Estimation model with hopper
   num_workers: 5
   num_gpu_per_worker: 1 # 1
@@ -12,7 +12,7 @@ meta_data:
 variables:
   # seed: [723894, 23789]
   seed: [723894]
-  sigma: [0.05, 0.1, 0.15, 0.2, 0.3] # [0.1] # 
+  sigma: [0.3]
 
 # -----------------------------------------------------------------------------
 constants:
@@ -33,7 +33,7 @@ constants:
     mode: 'deen'
     state_only: false
 
-    num_epochs: 50001
+    num_epochs: 200001
     num_steps_per_epoch: -1
     num_steps_between_train_calls: -1
     max_path_length: 1000

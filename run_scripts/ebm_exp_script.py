@@ -15,7 +15,7 @@ from rlkit.envs import get_env
 import rlkit.torch.pytorch_util as ptu
 from rlkit.launchers.launcher_util import setup_logger, set_seed
 
-from rlkit.envs.wrappers import ScaledEnv
+from rlkit.envs.wrappers import ScaledEnv, MinmaxEnv
 from rlkit.torch.sac.policies import ReparamTanhMultivariateGaussianPolicy
 from rlkit.torch.ebil.energy_models.simple_ebm_models import MLPEBM
 from rlkit.torch.ebil.energy_models.simple_ae_models import MLPAE
@@ -28,6 +28,12 @@ def experiment(variant):
     expert_demos_path = listings[variant['expert_name']]['file_paths'][variant['expert_idx']]
     buffer_save_dict = joblib.load(expert_demos_path)
     expert_replay_buffer = buffer_save_dict['train']
+
+    if 'minmax_env_with_demo_stats' in variant.keys():
+        if variant['minmax_env_with_demo_stats']:
+            print('Use minmax envs')
+            assert 'norm_train' in buffer_save_dict.keys()
+            expert_replay_buffer = buffer_save_dict['norm_train']
 
     env_specs = variant['env_specs']
     env = get_env(env_specs)
@@ -55,6 +61,18 @@ def experiment(variant):
             acts_mean=buffer_save_dict['acts_mean'],
             acts_std=buffer_save_dict['acts_std'],
         )
+    elif variant['minmax_env_with_demo_stats']:
+        env = MinmaxEnv(
+            env,
+            obs_min=buffer_save_dict['obs_min'],
+            obs_max=buffer_save_dict['obs_max'],
+        )
+        training_env = MinmaxEnv(
+            training_env,
+            obs_min=buffer_save_dict['obs_min'],
+            obs_max=buffer_save_dict['obs_max'],
+        )
+
 
     obs_space = env.observation_space
     act_space = env.action_space
@@ -138,13 +156,17 @@ if __name__ == '__main__':
         spec_string = spec_file.read()
         exp_specs = yaml.load(spec_string)
 
+    # make all seeds the same.
+    exp_specs['env_specs']['eval_env_seed'] = exp_specs['env_specs']['training_env_seed'] = exp_specs['seed']
+
     if exp_specs['num_gpu_per_worker'] > 0:
         print('\n\nUSING GPU\n\n')
         ptu.set_gpu_mode(True, args.gpu)
     exp_id = exp_specs['exp_id']
     exp_prefix = exp_specs['exp_name']
+    exp_prefix = exp_prefix + '--sigma-{}'.format(exp_specs['sigma'])
     seed = exp_specs['seed']
     set_seed(seed)
-    setup_logger(exp_prefix=exp_prefix, exp_id=exp_id, variant=exp_specs, snapshot_mode="all")
+    setup_logger(exp_prefix=exp_prefix, exp_id=exp_id, variant=exp_specs, seed=seed, snapshot_mode="all")
 
     experiment(exp_specs)
