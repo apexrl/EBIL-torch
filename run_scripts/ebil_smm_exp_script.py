@@ -25,13 +25,6 @@ from rlkit.launchers import config
 import torch
 from rlkit.torch.state_marginal_matching.ebil_smm import EBIL
 
-ebm_id_dic_pm_infty = {'sigma':{'0.03':'0000', '0.04':'0001', '0.05':'0002'}}
-ebm_id_dic_pm_x = {'sigma':{'0.05':'0000', '0.08':'0001', '0.1':'0002'}}
-ebm_id_dic_pm_triangle = {'sigma':{'0.05':'0000', '0.08':'0001', '0.1':'0002'}}
-ebm_id_dic_pm_square = {'sigma':{'0.05':'0000', '0.08':'0001', '0.1':'0002'}}
-ebm_id_dics = {'simple_point_mass_infty':ebm_id_dic_pm_infty, 'simple_point_mass_x':ebm_id_dic_pm_x, 'simple_point_mass_square':ebm_id_dic_pm_square, 'simple_point_mass_triangle':ebm_id_dic_pm_triangle}
-
-
 def experiment(variant):
     with open('expert_demos_listing.yaml', 'r') as f:
         listings = yaml.load(f.read())
@@ -98,24 +91,10 @@ def experiment(variant):
             clamp_magnitude=variant['ebm_clamp_magnitude'],
         )
         """
-        ebm_exp_name = 'ebm-deen-smm-implementation-'+variant['env_specs']['task_name']
+        ebm_exp_name = 'ebm-deen-'+variant['env_specs']['env_name']+'-'+str(variant['expert_traj_num'])+'-train--sigma-'+str(variant['ebm_sigma'])
         ebm_dir = os.path.join(config.LOCAL_LOG_DIR, ebm_exp_name)
 
-        ebm_id_dirs = os.listdir(ebm_dir)
-        tmp = []
-        ebm_id_dic = ebm_id_dics[variant['env_specs']['env_name']+'_'+variant['env_specs']['task_name']]
-
-        if str(variant['ebm_sigma']) in ebm_id_dic['sigma'].keys():
-            ebm_id = ebm_id_dic['sigma'][str(variant['ebm_sigma'])]
-            tmp = [_ for _ in ebm_id_dirs if ebm_id in _]
-        else:
-            raise NotImplementedError
-
-        if len(tmp)>0:
-            ebm_id_dirs = tmp
-        ebm_id_dirs = sorted(ebm_id_dirs, key=lambda x: os.path.getmtime(os.path.join(ebm_dir, x)))
-
-        load_ebm_dir = os.path.join(ebm_dir, ebm_id_dirs[-1]) # Choose the last as the load ebm dir
+        load_ebm_dir = ebm_dir
         load_epoch = variant['ebm_epoch']
         load_name = 'itr_{}.pkl'.format(load_epoch)
         if load_epoch == 'best':
@@ -124,8 +103,6 @@ def experiment(variant):
         
         load_ebm_pkl = joblib.load(load_ebm_path, mmap_mode='r')
         ebm_model = load_ebm_pkl['ebm']
-
-        print("loaded EBM from {}".format(load_ebm_path))
         
     else:
         raise NotImplementedError

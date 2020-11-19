@@ -122,24 +122,10 @@ def experiment(variant):
             clamp_magnitude=variant['ebm_clamp_magnitude'],
         )
         """
-        ebm_exp_name = 'ebm-deen-'+variant['env_specs']['env_name']+'-'+str(variant['expert_traj_num'])+'-train'
+        ebm_exp_name = 'ebm-deen-'+variant['env_specs']['env_name']+'-'+str(variant['expert_traj_num'])+'-train--sigma-'+str(variant['ebm_sigma'])
         ebm_dir = os.path.join(config.LOCAL_LOG_DIR, ebm_exp_name)
 
-        ebm_id_dirs = os.listdir(ebm_dir)
-        tmp = []
-        ebm_id_dic = ebm_id_dics[variant['env_specs']['env_name']]
-
-        if str(variant['ebm_sigma']) in ebm_id_dic['sigma'].keys():
-            ebm_id = ebm_id_dic['sigma'][str(variant['ebm_sigma'])]
-            tmp = [_ for _ in ebm_id_dirs if ebm_id in _]
-        else:
-            raise NotImplementedError
-
-        if len(tmp)>0:
-            ebm_id_dirs = tmp
-        ebm_id_dirs = sorted(ebm_id_dirs, key=lambda x: os.path.getmtime(os.path.join(ebm_dir, x)))
-
-        load_ebm_dir = os.path.join(ebm_dir, ebm_id_dirs[-1]) # Choose the last as the load ebm dir
+        load_ebm_dir = ebm_dir
         load_epoch = variant['ebm_epoch']
         load_name = 'itr_{}.pkl'.format(load_epoch)
         if load_epoch == 'best':
@@ -151,13 +137,10 @@ def experiment(variant):
 
     
     elif variant['ebil_params']['mode'] == 'ae':
-        ebm_exp_name = 'ebm-ae-'+variant['env_specs']['env_name']+'-'+str(variant['expert_traj_num'])+'-train'
+        ebm_exp_name = 'ebm-ae-'+variant['env_specs']['env_name']+'-'+str(variant['expert_traj_num'])+'-train--sigma-'+str(variant['ebm_sigma'])
         ebm_dir = os.path.join(config.LOCAL_LOG_DIR, ebm_exp_name)
 
-        ebm_id_dirs = os.listdir(ebm_dir)
-        ebm_id_dirs = sorted(ebm_id_dirs, key=lambda x: os.path.getmtime(os.path.join(ebm_dir, x)))
-
-        load_ebm_dir = os.path.join(ebm_dir, ebm_id_dirs[-1]) # Choose the last as the load ebm dir
+        load_ebm_dir = ebm_dir
         load_epoch = variant['ebm_epoch']
         load_name = 'itr_{}.pkl'.format(load_epoch)
         if load_epoch == 'best':

@@ -2,7 +2,7 @@ meta_data:
   script_path: run_scripts/ebm_exp_script.py
   exp_name: ebm_deen_hopper_4_train
   description: Train a Deep Energy Estimation model with hopper
-  num_workers: 2
+  num_workers: 4
   num_gpu_per_worker: 1 # 1
   num_cpu_per_worker: 4
   mem_per_worker: 16gb
@@ -12,14 +12,14 @@ meta_data:
 variables:
   # seed: [723894, 23789]
   seed: [723894]
-  sigma: [0.05, 0.1, 0.2]
+  sigma: [0.01, 0.05, 0.1, 0.2, 0.3]
 
 # -----------------------------------------------------------------------------
 constants:
   expert_name: 'norm_hopper_4_demos_sub_20'
   expert_idx: 0
   scale_env_with_demo_stats: false
-  minmax_env_with_demo_stats: true
+  minmax_env_with_demo_stats: false
 
   policy_net_size: 256
   policy_num_hidden_layers: 2
@@ -31,11 +31,10 @@ constants:
   ebm_clamp_magnitude: 1.0
 
   ebm_params:
-
     mode: 'deen'
     state_only: false
 
-    num_epochs: 5001
+    num_epochs: 100001
     num_steps_per_epoch: -1
     num_steps_between_train_calls: -1
     max_path_length: 1000

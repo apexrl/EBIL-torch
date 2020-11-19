@@ -36,7 +36,7 @@ class MLPEBM(nn.Module):
             self.mod_list.append(hid_act_class())
         
         self.mod_list.append(nn.Linear(hid_dim, 1))
-        # self.mod_list.append(hid_act_class())
+        self.mod_list.append(nn.Sigmoid())
         self.model = nn.Sequential(*self.mod_list)
 
 

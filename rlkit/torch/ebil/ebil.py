@@ -19,13 +19,13 @@ def reward_func(rew_name, cons=0):
     elif rew_name == '-energy-1':
         return lambda x:-1-x
     elif rew_name == 'exp(-energy-1)':
-        return lambda x:tf.exp(-x-1)
+        return lambda x:torch.exp(-x-1)
     elif rew_name == '(-energy+1)div2':
         return lambda x:(-x+1)/2.0
     elif rew_name == 'exp(-energy+1)':
-        return lambda x:tf.exp(-x+1)
+        return lambda x:torch.exp(-x+1)
     elif rew_name == 'exp(-energy)':
-        return lambda x:tf.exp(-x)
+        return lambda x:torch.exp(-x)
     else:
         raise NotImplementedError
 
@@ -59,7 +59,7 @@ class EBIL(TorchBaseAlgorithm):
 
         **kwargs
     ):
-        assert mode in ['deen', 'ae'], 'Invalid ebil algorithm!'
+        assert mode in ['deen', 'ae', 'ssm'], 'Invalid ebil algorithm!'
         if kwargs['wrap_absorbing']: raise NotImplementedError()
         super().__init__(**kwargs)
 
@@ -99,6 +99,8 @@ class EBIL(TorchBaseAlgorithm):
             return self.ebm(data)
         elif self.mode == 'ae':
             return (data - self.ebm(data))**2
+        elif self.mode == 'ssm':
+            return self.ebm(data, 0)
         else:
             raise NotImplementedError
 
@@ -151,13 +153,29 @@ class EBIL(TorchBaseAlgorithm):
             else:
                 ebm_input = torch.cat([obs, acts], dim=1)
         
+        ebm_rew = self.get_energy(ebm_input).detach()
         if self.clamp_magnitude > 0:
             print(self.clamp_magnitude, self.clamp_magnitude is None)
-            ebm_rew = torch.clamp(ebm_input, min=-1.0*self.clamp_magnitude, max=self.clamp_magnitude)
+            ebm_rew = torch.clamp(ebm_rew, min=-1.0*self.clamp_magnitude, max=self.clamp_magnitude)
 
-        ebm_rew = self.get_energy(ebm_input).detach()
         # compute the reward using the algorithm
         policy_batch['rewards'] = reward_func(self.rew_func, self.cons)(ebm_rew)
+
+        # print('ebm_obs: ', np.mean(ptu.get_numpy(policy_batch['observations']), axis=0))
+        # print('ebm: ', np.mean(ptu.get_numpy(ebm_rew)))
+        # print('ebm_rew: ', np.mean(ptu.get_numpy(policy_batch['rewards'])))
+
+        batch_data = self.expert_replay_buffer.random_batch(100, keys=['observations', 'actions'])
+        obs = torch.Tensor(batch_data['observations'])
+        acts = torch.Tensor(batch_data['actions'])
+        exp_input = torch.cat([obs, acts], dim=1).to(ptu.device)
+        exp_ebm = self.get_energy(exp_input).detach()
+        exp_rew = reward_func(self.rew_func, self.cons)(exp_ebm)
+
+        # print('exp_obs: ', np.mean(batch_data['observations'],axis=0))
+        # print("exp data ebm: ", np.mean(ptu.get_numpy(exp_ebm)))
+        # print("exp data rew: ", np.mean(ptu.get_numpy(exp_rew)))
+        
         
         # policy optimization step
         self.policy_trainer.train_step(policy_batch)

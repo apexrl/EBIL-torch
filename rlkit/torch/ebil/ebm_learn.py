@@ -96,6 +96,9 @@ class EBMLearn(TorchBaseAlgorithm):
         obs = batch['observations']
         acts = batch['actions']
 
+        if len(acts.shape) < 2:
+            acts = torch.unsqueeze(acts, 1)
+
         self.optimizer.zero_grad()
         if self.mode == 'deen':
             batch_data = torch.cat([obs, acts], dim=1).to(ptu.device)
@@ -215,6 +218,8 @@ class EBMLearn(TorchBaseAlgorithm):
         test_paths = self.eval_sampler.obtain_samples(eval_steps)
         obs = torch.Tensor(np.squeeze(np.vstack([path["observations"] for path in test_paths])))
         acts = torch.Tensor(np.squeeze(np.vstack([path["actions"] for path in test_paths])))
+        if len(acts.shape) < 2:
+            acts = torch.unsqueeze(acts, 1)
         random_input = torch.cat([obs, acts], dim=1).to(ptu.device)
         
 

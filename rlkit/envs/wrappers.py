@@ -135,6 +135,71 @@ class ScaledEnv(ProxyEnv, Serializable):
             return self._wrapped_env.log_new_ant_multi_statistics(paths, epoch, log_dir)
         else:
             return {}
+
+
+class MinmaxEnv(ProxyEnv, Serializable):
+    '''
+    Scale the obs if desired
+    '''
+    def __init__(
+        self,
+        env,
+        obs_min=None,
+        obs_max=None,
+    ):
+        self._wrapped_env = env
+        self._serializable_initialized = False
+        Serializable.quick_init(self, locals())
+        ProxyEnv.__init__(self, env)
+
+        if obs_min is not None:
+            assert obs_max is not None
+            self._scale_obs = True
+        else:
+            assert obs_max is None
+            self._scale_obs = False
+        
+        self.obs_min = obs_min
+        self.obs_max = obs_max
+
+    def get_unscaled_obs(self, obs):
+        if self._scale_obs:
+            return obs*(self.obs_max-self.obs_min) + self.obs_min
+        else:
+            return obs
+    
+
+    def get_scaled_obs(self, obs):
+        if self._scale_obs:
+            return (obs - self.obs_min) / (self.obs_max-self.obs_min)
+        else:
+            return obs
+    
+    def step(self, action):
+        obs, r, done, info = self._wrapped_env.step(action)
+        if self._scale_obs:
+            obs = (obs - self.obs_min) / (self.obs_max-self.obs_min)
+        return obs, r, done, info
+    
+
+    def reset(self, **kwargs):
+        obs = self._wrapped_env.reset(**kwargs)
+        if self._scale_obs:
+            obs = (obs - self.obs_min) / (self.obs_max-self.obs_min)
+        return obs
+
+
+    def log_statistics(self, *args, **kwargs):
+        if hasattr(self._wrapped_env, "log_statistics"):
+            return self._wrapped_env.log_statistics(*args, **kwargs)
+        else:
+            return {}
+    
+    def log_new_ant_multi_statistics(self, paths, epoch, log_dir):
+        if hasattr(self._wrapped_env, "log_new_ant_multi_statistics"):
+            return self._wrapped_env.log_new_ant_multi_statistics(paths, epoch, log_dir)
+        else:
+            return {}
     
 
 class ScaledMetaEnv(ProxyEnv, Serializable):
