@@ -83,57 +83,81 @@ class SoftActorCritic(Trainer):
         actions = batch['actions']
         next_obs = batch['next_observations']
 
-        q1_pred = self.qf1(obs, actions)
-        q2_pred = self.qf2(obs, actions)
-        v_pred = self.vf(obs)
-        # Make sure policy accounts for squashing functions like tanh correctly!
-        policy_outputs = self.policy(obs, return_log_prob=True)
-        new_actions, policy_mean, policy_log_std, log_pi = policy_outputs[:4]
-
         """
         QF Loss
         """
-        target_v_values = self.target_vf(next_obs)
-        q_target = rewards + (1. - terminals) * self.discount * target_v_values
-        qf1_loss = 0.5 * torch.mean((q1_pred - q_target.detach())**2)
-        qf2_loss = 0.5 * torch.mean((q2_pred - q_target.detach())**2)
+        self.qf1_optimizer.zero_grad()
+        self.qf2_optimizer.zero_grad()
+        q1_pred = self.qf1(obs, actions)
+        q2_pred = self.qf2(obs, actions)
+        target_v_values = self.target_vf(next_obs)  # do not need grad || it's the shared part of two calculation
+        q_target = (rewards + (1. - terminals) * self.discount * target_v_values)  ## original implementation has detach
+        q_target = q_target.detach()
+        qf1_loss = 0.5 * torch.mean((q1_pred - q_target) ** 2)
+        qf2_loss = 0.5 * torch.mean((q2_pred - q_target) ** 2)
 
         """
         VF Loss
         """
+        self.vf_optimizer.zero_grad()
+        v_pred = self.vf(obs)
+        # Make sure policy accounts for squashing functions like tanh correctly!
+        policy_outputs = self.policy(obs, return_log_prob=True)
+        # in this part, we only need new_actions and log_pi with no grad
+        new_actions, policy_mean, policy_log_std, log_pi = policy_outputs[:4]
         q1_new_acts = self.qf1(obs, new_actions)
         q2_new_acts = self.qf2(obs, new_actions)
         q_new_actions = torch.min(q1_new_acts, q2_new_acts)
         v_target = q_new_actions - log_pi
-        vf_loss = 0.5 * torch.mean((v_pred - v_target.detach())**2)
+        v_target = v_target.detach()
+        vf_loss = 0.5 * torch.mean((v_pred - v_target) ** 2)
+
+        qf1_loss.backward()
+        qf2_loss.backward()
+        vf_loss.backward()
+
+        self.qf1_optimizer.step()
+        self.qf2_optimizer.step()
+
+        self.vf_optimizer.step()
+
+        # print("v_tar: {}, log_pi:{}".format(torch.mean(v_target).detach().cpu(), torch.mean(log_pi).detach().cpu()))
 
         """
         Policy Loss
         """
-        policy_loss = torch.mean(log_pi - q_new_actions)
-        mean_reg_loss = self.policy_mean_reg_weight * (policy_mean**2).mean()
-        std_reg_loss = self.policy_std_reg_weight * (policy_log_std**2).mean()
+        new_actions, policy_mean, policy_log_std, log_pi = policy_outputs[:4]
+        q1_new_acts = self.qf1(obs, new_actions)
+        q2_new_acts = self.qf2(obs, new_actions)  ## error
+        q_new_actions = torch.min(q1_new_acts, q2_new_acts)
+
+        self.policy_optimizer.zero_grad()
+        policy_loss = torch.mean(log_pi - q_new_actions)  ##
+        mean_reg_loss = self.policy_mean_reg_weight * (policy_mean ** 2).mean()
+        std_reg_loss = self.policy_std_reg_weight * (policy_log_std ** 2).mean()
         policy_reg_loss = mean_reg_loss + std_reg_loss
         policy_loss = policy_loss + policy_reg_loss
+        policy_loss.backward()
+        self.policy_optimizer.step()
 
         """
         Update networks
         """
-        self.qf1_optimizer.zero_grad()
-        qf1_loss.backward()
-        self.qf1_optimizer.step()
-
-        self.qf2_optimizer.zero_grad()
-        qf2_loss.backward()
-        self.qf2_optimizer.step()
-
-        self.vf_optimizer.zero_grad()
-        vf_loss.backward()
-        self.vf_optimizer.step()
-
-        self.policy_optimizer.zero_grad()
-        policy_loss.backward()
-        self.policy_optimizer.step()
+        # self.qf1_optimizer.zero_grad()
+        # qf1_loss.backward()
+        # self.qf1_optimizer.step()
+        #
+        # self.qf2_optimizer.zero_grad()
+        # qf2_loss.backward()
+        # self.qf2_optimizer.step()
+        #
+        # self.vf_optimizer.zero_grad()
+        # vf_loss.backward()
+        # self.vf_optimizer.step()
+        #
+        # self.policy_optimizer.zero_grad()
+        # policy_loss.backward()
+        # self.policy_optimizer.step()
 
         self._update_target_network()
 

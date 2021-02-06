@@ -145,13 +145,22 @@ class BC(TorchBaseAlgorithm):
                 self.eval_statistics = OrderedDict()
             self.eval_statistics['critic loss'] = ptu.get_numpy(critic_loss)
             self.eval_statistics['wd loss'] = ptu.get_numpy(wd_loss)
-
-            critic_loss.backward(retain_graph=True)
-            self.critic_optimizer.step()
-
+            
+       
             if i - self.n_itr_critic == -1:
+                self.critic_optimizer.zero_grad()
+                critic_loss.backward(retain_graph=True)
+                self.critic_optimizer.step()
+
+                self.wd_optimizer.zero_grad()
                 wd_loss.backward()
                 self.wd_optimizer.step()
+
+            else:
+                self.critic_optimizer.zero_grad()
+                critic_loss.backward()
+                self.critic_optimizer.step()
+
 
     def _do_update_step(self, epoch, use_expert_buffer=True):
         batch = self.get_batch(

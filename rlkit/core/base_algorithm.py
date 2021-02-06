@@ -250,8 +250,8 @@ class BaseAlgorithm(metaclass=abc.ABCMeta):
         if self._can_evaluate():
             # save if it's time to save
             if (epoch % self.freq_saving == 0) or (epoch + 1 >= self.num_epochs):
-                if epoch + 1 >= self.num_epochs:
-                    epoch = 'final'
+                # if epoch + 1 >= self.num_epochs:
+                #     epoch = 'final'
                 logger.save_extra_data(self.get_extra_data_to_save(epoch))
                 params = self.get_epoch_snapshot(epoch)
                 logger.save_itr_params(epoch, params)

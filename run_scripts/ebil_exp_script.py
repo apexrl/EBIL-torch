@@ -125,7 +125,11 @@ def experiment(variant):
         ebm_exp_name = 'ebm-deen-'+variant['env_specs']['env_name']+'-'+str(variant['expert_traj_num'])+'-train--sigma-'+str(variant['ebm_sigma'])
         ebm_dir = os.path.join(config.LOCAL_LOG_DIR, ebm_exp_name)
 
-        load_ebm_dir = ebm_dir
+        ebm_id_dirs = os.listdir(ebm_dir)
+        ebm_id_dirs = sorted(ebm_id_dirs, key=lambda x: os.path.getmtime(os.path.join(ebm_dir, x)))
+
+        load_ebm_dir = os.path.join(ebm_dir, ebm_id_dirs[-1]) # Choose the last as the load ebm dir
+
         load_epoch = variant['ebm_epoch']
         load_name = 'itr_{}.pkl'.format(load_epoch)
         if load_epoch == 'best':
@@ -140,7 +144,11 @@ def experiment(variant):
         ebm_exp_name = 'ebm-ae-'+variant['env_specs']['env_name']+'-'+str(variant['expert_traj_num'])+'-train--sigma-'+str(variant['ebm_sigma'])
         ebm_dir = os.path.join(config.LOCAL_LOG_DIR, ebm_exp_name)
 
-        load_ebm_dir = ebm_dir
+        ebm_id_dirs = os.listdir(ebm_dir)
+        ebm_id_dirs = sorted(ebm_id_dirs, key=lambda x: os.path.getmtime(os.path.join(ebm_dir, x)))
+
+        load_ebm_dir = os.path.join(ebm_dir, ebm_id_dirs[-1]) # Choose the last as the load ebm dir
+
         load_epoch = variant['ebm_epoch']
         load_name = 'itr_{}.pkl'.format(load_epoch)
         if load_epoch == 'best':
@@ -195,14 +203,17 @@ def experiment(variant):
         expert_replay_buffer=expert_replay_buffer,
         **variant['ebil_params']
     )
-
+    
     if ptu.gpu_enabled():
         algorithm_pretrain.to(ptu.device)
         algorithm.to(ptu.device)
+    else:
+        algorithm_pretrain.to('cpu')
+        algorithm.to('cpu')
     if variant['pretrain']:
         algorithm_pretrain.train()
     
-    algorithm.train(flag=True)
+    algorithm.train()
 
     return 1
 
@@ -211,6 +222,7 @@ if __name__ == '__main__':
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--experiment', help='experiment specification file')
+    parser.add_argument('-g', '--gpu', help='gpu id', type=int, default=0)
     args = parser.parse_args()
     with open(args.experiment, 'r') as spec_file:
         spec_string = spec_file.read()

@@ -2,7 +2,7 @@ meta_data:
   script_path: run_scripts/ebil_exp_script.py
   exp_name: ebil_deen_hopper_4_hype_search
   description: Train an EBIL model in Hopper with DEEN
-  num_workers: 8 # 64
+  num_workers: 6 # 64
   num_gpu_per_worker: 1 # 1 
   num_cpu_per_worker: 4 # 2
   mem_per_worker: 4gb
@@ -10,12 +10,12 @@ meta_data:
   node_exclusions: gpu048,gpu024,gpu025,gpu012,gpu027
 # -----------------------------------------------------------------------------
 variables:
-  ebm_epoch: [25000, 50000, 75000, 100000, 'best']
-  ebm_sigma:  [0.01, 0.05, 0.1, 0.2, 0.3]
+  ebm_epoch: [75000, 100000]
+  ebm_sigma:  [0.01, 0.05, 0.1]
   sac_params:
-    reward_scale: [1.0, 2.0, 4.0, 8.0, 16.0]
+    reward_scale: [32.0, 64.0, 128.0]
   # seed: [723894, 23789]
-  seed: [0, 1, 2]
+  seed: [1]
 
 # -----------------------------------------------------------------------------
 constants:
@@ -23,7 +23,7 @@ constants:
   expert_name: 'norm_hopper_4_demos_sub_20'
   expert_traj_num: 4
   expert_idx: 0
-  scale_env_with_demo_stats: false
+  scale_env_with_demo_stats: true
   minmax_env_with_demo_stats: false
 
   ebm_num_blocks: 5
@@ -44,8 +44,8 @@ constants:
     state_only: false
     clamp_magnitude: -1
 
-    num_epochs: 162
-    num_steps_per_epoch: 100000
+    num_epochs: 302
+    num_steps_per_epoch: 10000
     num_steps_between_train_calls: 1000
     max_path_length: 1000
     min_steps_before_training: 5000
@@ -57,7 +57,7 @@ constants:
     no_terminal: false
     wrap_absorbing: false
 
-    num_policy_update_loops_per_train_call: 100
+    num_policy_update_loops_per_train_call: 1000
     num_policy_updates_per_loop_iter: 1
 
     use_grad_pen: false
