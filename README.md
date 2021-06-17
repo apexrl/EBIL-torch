@@ -1,4 +1,4 @@
-*Pytorch Implemetation of <[Energy-Based Imitation Learning](https://arxiv.org/abs/2004.09395)>*
+*Pytorch Implementation of <[Energy-Based Imitation Learning](https://arxiv.org/abs/2004.09395)>*
 
 **Important Notes**
 
