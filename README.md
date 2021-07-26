@@ -21,7 +21,7 @@ Implemented LfD algorithms:
 Notes:
 - First appropriately modify rlkit/launchers/config.py
 - run_experiment.py calls srun which is a SLURM command. You can use the `--nosrun` flag to not use SLURM and use your local machine instead.
-- The expert demonstrations and state marginal data used for imitation learning experiments can be found at [THIS LINK](https://drive.google.com/drive/folders/1jwKb5FjFtAlvBUDdHiHJN0i7PsBCthfg?usp=sharing). To use them please download them and modify the paths in expert_demos_listing.yaml.
+- The expert demonstrations used for imitation learning experiments can be found at [THIS LINK](https://drive.google.com/drive/folders/1jwKb5FjFtAlvBUDdHiHJN0i7PsBCthfg?usp=sharing). To use them please download them and modify the paths in expert_demos_listing.yaml.
 - The yaml files describe the experiments to run and have three sections:
 ..* meta_data: general experiment and resource settings
 ..* variables: used to describe the hyperparameters to search over
